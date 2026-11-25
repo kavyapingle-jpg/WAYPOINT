@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f8f8f3">
+  <title>WAYPOINT — A gratitude journal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="lockScreen" class="lock-screen hidden">
+    <div class="lock-card">
+      <div class="brand-mark">W</div>
+      <p class="eyebrow">YOUR PRIVATE SPACE</p>
+      <h1>Welcome back.</h1>
+      <p class="muted">Enter your PIN to open WAYPOINT.</p>
+      <input id="unlockPin" class="pin-input" type="password" inputmode="numeric" maxlength="8" placeholder="Enter PIN" aria-label="Enter PIN">
+      <p id="lockError" class="error" role="alert"></p>
+      <button id="unlockBtn" class="button primary full">Unlock journal</button>
+    </div>
+  </div>
+
+  <div class="app-shell" id="appShell">
+    <aside class="sidebar">
+      <a class="brand" href="#" data-page="home" aria-label="WAYPOINT home">
+        <span class="brand-mark">W</span>
+        <span><strong>WAYPOINT</strong><small>your space to reflect</small></span>
+      </a>
+      <div class="side-label">MENU</div>
+      <nav class="nav-list" aria-label="Main navigation">
+        <button class="nav-link active" data-page="home"><span class="nav-icon">⌂</span>Home</button>
+        <button class="nav-link" data-page="new-entry"><span class="nav-icon">＋</span>New entry</button>
+        <button class="nav-link" data-page="explore"><span class="nav-icon">✳</span>Explore</button>
+        <button class="nav-link" data-page="progress"><span class="nav-icon">▥</span>Your progress</button>
+        <button class="nav-link" data-page="reflection"><span class="nav-icon">▤</span>Reflection</button>
+        <button class="nav-link" data-page="settings"><span class="nav-icon">⚙</span>Settings</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="side-note"><span class="tiny-spark">✳</span><p>Small moments matter.<br><strong>Take a moment for you.</strong></p></div>
+        <span class="version">WAYPOINT · PERSONAL JOURNAL</span>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div><span class="eyebrow" id="topDate"></span><span class="top-greeting">A little space for yourself</span></div>
+        <div class="top-actions"><span class="privacy-pill">● Private journal</span><button class="avatar" data-page="settings" aria-label="Open settings">K</button></div>
+      </header>
+
+      <section class="page active" id="page-home">
+        <div class="welcome-row">
+          <div><p class="eyebrow">YOUR DAILY PAUSE</p><h1>Good <span id="timeGreeting">day</span>, Kavya.</h1><p class="muted">Make a little room for the good things.</p></div>
+          <div class="welcome-art" aria-hidden="true"><span>☼</span><i></i><b></b></div>
+        </div>
+        <div class="home-grid">
+          <article class="card prompt-feature">
+            <div class="card-top"><span class="eyebrow">TODAY'S PROMPT</span><span class="soft-tag">A moment to notice</span></div>
+            <h2 id="homePrompt">What made you smile today?</h2>
+            <p class="muted">You don't need a big reason. Start with one small thing.</p>
+            <button class="button primary" data-page="new-entry">Write now <span>↗</span></button>
+          </article>
+          <article class="card stat-card"><span class="stat-icon">✳</span><span class="eyebrow">CURRENT STREAK</span><strong id="homeStreak">0 days</strong><p class="muted">Every entry is a fresh start.</p></article>
+          <article class="card stat-card"><span class="stat-icon">▤</span><span class="eyebrow">TOTAL ENTRIES</span><strong id="homeTotal">0</strong><p class="muted">Moments you've saved.</p></article>
+          <article class="card message-card"><span class="eyebrow">A THOUGHT FOR YOU</span><h2>“There is something good in every day.”</h2><p class="muted">Give yourself a moment to find it.</p></article>
+          <article class="card shortcut-card"><div><span class="eyebrow">LOOK BACK</span><h2>Your reflections</h2><p class="muted">Revisit the moments you've saved.</p></div><button class="round-arrow" data-page="reflection" aria-label="Open reflections">↗</button></article>
+        </div>
+      </section>
+
+      <section class="page" id="page-new-entry">
+        <div class="page-heading"><p class="eyebrow">SLOW DOWN FOR A MOMENT</p><h1>New entry</h1><p class="muted">A few words are enough. This is your space.</p></div>
+        <form id="entryForm" class="entry-layout">
+          <div class="card entry-card">
+            <div class="entry-meta"><span class="eyebrow" id="entryDate"></span><span class="soft-tag">Private entry</span></div>
+            <label class="field-label" for="entryTitle">Give this moment a title <span class="optional">OPTIONAL</span></label>
+            <input id="entryTitle" class="text-input" maxlength="70" placeholder="A little thing worth remembering">
+            <label class="field-label" for="entryText">What are you grateful for today?</label>
+            <textarea id="entryText" rows="7" placeholder="Take your time. What happened? Who was there? How did it make you feel..." required></textarea>
+            <div class="entry-tools"><label class="field-label" for="entryTag">Add a tag</label><select id="entryTag"><option>Everyday moments</option><option>Family</option><option>Friends</option><option>School</option><option>Self-care</option><option>Nature</option><option>Achievements</option></select></div>
+            <div class="mood-area"><span class="field-label">How did this moment make you feel?</span><div class="mood-options" id="moodOptions">
+              <button type="button" class="mood-choice" data-mood="Calm"><span>☁</span>Calm</button>
+              <button type="button" class="mood-choice" data-mood="Happy"><span>☀</span>Happy</button>
+              <button type="button" class="mood-choice" data-mood="Loved"><span>♡</span>Loved</button>
+              <button type="button" class="mood-choice" data-mood="Proud"><span>✦</span>Proud</button>
+              <button type="button" class="mood-choice" data-mood="Hopeful"><span>↗</span>Hopeful</button>
+            </div></div>
+            <div class="form-footer"><span class="muted small">Your entry is saved on this device.</span><button class="button primary" type="submit">Save entry <span>✓</span></button></div>
+            <p id="entryFeedback" class="success" role="status"></p>
+          </div>
+          <aside class="card prompt-side"><span class="eyebrow">NEED A STARTING POINT?</span><h2>Three things to think about</h2><div class="mini-prompt"><b>01</b><p>What is one small thing that made today better?</p></div><div class="mini-prompt"><b>02</b><p>Who made you feel supported or understood?</p></div><div class="mini-prompt"><b>03</b><p>What is something about yourself you appreciate?</p></div><p class="muted small">You can answer one, all three, or simply write freely.</p></aside>
+        </form>
+      </section>
+
+      <section class="page" id="page-explore">
+        <div class="page-heading"><p class="eyebrow">FIND A THOUGHT TO BEGIN WITH</p><h1>Explore</h1><p class="muted">Choose a theme and find a prompt that feels right.</p></div>
+        <div class="explore-controls"><input id="promptSearch" class="text-input search-input" placeholder="⌕  Search prompts..." aria-label="Search prompts"><div id="categoryFilters" class="filter-row"></div></div>
+        <div id="promptGrid" class="prompt-grid"></div>
+      </section>
+
+      <section class="page" id="page-progress">
+        <div class="page-heading"><p class="eyebrow">YOUR JOURNEY, AT YOUR PACE</p><h1>Your progress</h1><p class="muted">A gentle overview of the moments you've recorded.</p></div>
+        <div class="progress-stats">
+          <article class="card progress-stat"><span class="eyebrow">TOTAL ENTRIES</span><strong id="progressTotal">0</strong><span class="muted small">moments saved</span></article>
+          <article class="card progress-stat"><span class="eyebrow">CURRENT STREAK</span><strong id="progressStreak">0</strong><span class="muted small">consecutive days</span></article>
+          <article class="card progress-stat"><span class="eyebrow">MOST USED TAG</span><strong class="stat-word" id="topTag">—</strong><span class="muted small">your common theme</span></article>
+        </div>
+        <div class="progress-columns">
+          <article class="card"><div class="card-top"><div><span class="eyebrow">YOUR ACTIVITY</span><h2>Recent weeks</h2></div><span class="soft-tag">Last 7 days</span></div><div id="weekChart" class="week-chart"></div></article>
+          <article class="card"><span class="eyebrow">YOUR FEELINGS</span><h2>Moods you've recorded</h2><div id="moodSummary" class="mood-summary"><p class="muted">Your mood summary will appear after you save an entry.</p></div></article>
+        </div>
+        <article class="card calendar-card"><div class="card-top"><div><span class="eyebrow">CONSISTENCY</span><h2>Your calendar</h2></div><span class="muted small" id="calendarMonth"></span></div><div class="calendar-grid" id="calendarGrid"></div></article>
+      </section>
+
+      <section class="page" id="page-reflection">
+        <div class="page-heading"><p class="eyebrow">LOOK BACK WITH KINDNESS</p><h1>Reflection</h1><p class="muted">Your moments, collected in one place.</p></div>
+        <div class="reflection-layout">
+          <div class="reflection-main">
+            <div class="card reflection-question"><span class="eyebrow">A QUESTION TO REFLECT ON</span><h2>What is something you want to remember from this week?</h2><p class="muted">Look through your entries and notice the little things that mattered.</p></div>
+            <div class="reflection-list-heading"><h2>Moments to look back on</h2><span class="muted small" id="reflectionCount">0 entries</span></div>
+            <div id="entryList" class="entry-list"></div>
+          </div>
+          <aside class="card reflection-side"><span class="eyebrow">WEEKLY REFLECTION</span><h2>Notice the good.</h2><p class="muted">Use these questions when you look back on your entries.</p><div class="reflection-question-mini">What made you feel appreciated?</div><div class="reflection-question-mini">What did you learn about yourself?</div><div class="reflection-question-mini">What would you like to make time for again?</div></aside>
+        </div>
+      </section>
+
+      <section class="page" id="page-settings">
+        <div class="page-heading"><p class="eyebrow">MAKE THIS SPACE YOURS</p><h1>Settings</h1><p class="muted">Personalise your journal and manage your privacy.</p></div>
+        <div class="settings-grid">
+          <article class="card settings-card"><span class="eyebrow">YOUR PROFILE</span><h2>Personal details</h2><label class="field-label" for="profileName">Name</label><input id="profileName" class="text-input" value="Kavya" maxlength="30"><p class="muted small">Your name appears in your welcome message.</p><button id="saveProfile" class="button secondary">Save profile</button></article>
+          <article class="card settings-card"><span class="eyebrow">PERSONAL PREFERENCES</span><h2>Make it comfortable</h2><label class="field-label" for="fontSize">Text size</label><select id="fontSize"><option value="16">Standard (16px)</option><option value="18">Large (18px)</option><option value="20">Extra large (20px)</option></select><div class="setting-row"><div><b>Soft contrast</b><p class="muted small">Use a slightly softer page background.</p></div><label class="switch"><input type="checkbox" id="softContrast" checked><span></span></label></div><div class="setting-row"><div><b>Daily reminder</b><p class="muted small">Show a gentle reminder on your home page.</p></div><label class="switch"><input type="checkbox" id="reminders"><span></span></label></div></article>
+          <article class="card settings-card"><span class="eyebrow">PRIVACY & SECURITY</span><h2>Keep your entries private</h2><p class="muted small">Set a PIN to add a privacy screen when you open the journal. Your PIN is stored only in this browser.</p><label class="field-label" for="newPin">Create or change PIN</label><input id="newPin" class="text-input" type="password" inputmode="numeric" maxlength="8" placeholder="4–8 digit PIN"><label class="field-label" for="confirmPin">Confirm PIN</label><input id="confirmPin" class="text-input" type="password" inputmode="numeric" maxlength="8" placeholder="Enter PIN again"><div class="settings-actions"><button id="savePin" class="button secondary">Save PIN</button><button id="removePin" class="text-button">Remove PIN</button></div><p id="pinFeedback" class="success" role="status"></p></article>
+          <article class="card settings-card"><span class="eyebrow">YOUR DATA</span><h2>Manage your journal</h2><p class="muted small">Your entries are stored locally in this browser. They are not uploaded to an account or cloud service.</p><button id="exportData" class="button secondary">Export my entries</button><button id="deleteData" class="text-button danger">Delete all journal data</button></article>
+        </div>
+        <p class="settings-footnote">WAYPOINT is a personal reflection tool, not a substitute for support from a trusted adult or professional.</p>
+      </section>
+
+      <footer class="footer">A small moment of gratitude can be a good place to begin. <span>WAYPOINT</span></footer>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="script.js"></script>
+</body>
+</html>

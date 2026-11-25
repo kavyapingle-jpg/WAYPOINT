@@ -1,0 +1,56 @@
+const $ = (s, root=document) => root.querySelector(s);
+const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+const STORE = "waypoint_v1";
+const defaults = {entries:[], profile:"Kavya", pin:"", fontSize:"16", softContrast:true, reminders:false};
+let data = loadData();
+let selectedMood = "";
+let activeCategory = "All";
+let toastTimer;
+const prompts = [
+ ["Mindset","What is one thing you like about the person you are becoming?"],
+ ["Mindset","What is something difficult that you handled better than you expected?"],
+ ["Mindset","What is one small thing you are looking forward to?"],
+ ["Self-care","What did you do today that helped you feel rested?"],
+ ["Self-care","What is something your body helped you do today?"],
+ ["Self-care","What is one kind thing you can do for yourself this week?"],
+ ["Relationships","Who made you feel included or understood recently?"],
+ ["Relationships","What is a quality you appreciate in a friend or family member?"],
+ ["Relationships","What is a conversation you are glad you had?"],
+ ["School","What is something new you learned today?"],
+ ["School","Who helped you with something at school?"],
+ ["School","What is one piece of work you feel proud of?"],
+ ["Fun","What made you laugh recently?"],
+ ["Fun","What is a small moment you wish you could replay?"],
+ ["Fun","What is something ordinary that you enjoyed today?"]
+];
+function loadData(){try{return {...defaults,...JSON.parse(localStorage.getItem(STORE)||"{}")}}catch{return {...defaults}}}
+function saveData(){localStorage.setItem(STORE,JSON.stringify(data))}
+function dateKey(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
+function prettyDate(value){return new Date(value+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"})}
+function showToast(msg){const el=$("#toast");el.textContent=msg;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2400)}
+function navigate(page){$$(".page").forEach(p=>p.classList.toggle("active",p.id===`page-${page}`));$$(".nav-link").forEach(b=>b.classList.toggle("active",b.dataset.page===page));if(page==="progress")renderProgress();if(page==="reflection")renderEntries();if(page==="home")renderHome();window.scrollTo({top:0,behavior:"smooth"})}
+$$("[data-page]").forEach(el=>el.addEventListener("click",e=>{e.preventDefault();navigate(el.dataset.page)}));
+function updateDates(){const now=new Date();$("#topDate").textContent=now.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"}).toUpperCase();$("#entryDate").textContent=prettyDate(dateKey()).toUpperCase();const h=now.getHours();$("#timeGreeting").textContent=h<12?"morning":h<18?"afternoon":"evening"}
+function streak(){const days=new Set(data.entries.map(e=>e.date));let count=0,d=new Date();if(!days.has(dateKey(d)))d.setDate(d.getDate()-1);while(days.has(dateKey(d))){count++;d.setDate(d.getDate()-1)}return count}
+function renderHome(){const name=data.profile||"there";const heading=$(".welcome-row h1");heading.innerHTML=`Good <span id="timeGreeting">${$("#timeGreeting")?.textContent||"day"}</span>, ${escapeHtml(name)}.`;$("#homeTotal").textContent=data.entries.length;$("#homeStreak").textContent=`${streak()} ${streak()===1?"day":"days"}`;const day=new Date().getDay();$("#homePrompt").textContent=prompts[day%prompts.length][1]}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+$("#moodOptions").addEventListener("click",e=>{const b=e.target.closest(".mood-choice");if(!b)return;selectedMood=b.dataset.mood;$$(".mood-choice").forEach(x=>x.classList.toggle("selected",x===b))});
+$("#entryForm").addEventListener("submit",e=>{e.preventDefault();const text=$("#entryText").value.trim();if(!text){$("#entryFeedback").textContent="Write a little something before saving.";return}data.entries.unshift({id:Date.now().toString(),date:dateKey(),title:$("#entryTitle").value.trim(),text,tag:$("#entryTag").value,mood:selectedMood});saveData();$("#entryForm").reset();selectedMood="";$$(".mood-choice").forEach(x=>x.classList.remove("selected"));$("#entryFeedback").textContent="Your moment has been saved.";renderHome();showToast("Entry saved to your journal.");setTimeout(()=>$("#entryFeedback").textContent="",3000)});
+const categories=["All","Mindset","Self-care","Relationships","School","Fun"];
+function renderExplore(){const filters=$("#categoryFilters");filters.innerHTML=categories.map(c=>`<button class="filter-chip ${activeCategory===c?"active":""}" data-category="${c}">${c}</button>`).join("");filters.onclick=e=>{const b=e.target.closest("[data-category]");if(!b)return;activeCategory=b.dataset.category;renderExplore()};const q=$("#promptSearch").value.toLowerCase();const filtered=prompts.filter(p=>(activeCategory==="All"||p[0]===activeCategory)&&p[1].toLowerCase().includes(q));$("#promptGrid").innerHTML=filtered.length?filtered.map((p,i)=>`<article class="prompt-card"><span class="soft-tag">${p[0]}</span><p>${p[1]}</p><button data-use-prompt="${prompts.indexOf(p)}">Use this prompt ↗</button></article>`).join(""):`<div class="empty-state">No prompts found. Try another search.</div>`}
+$("#promptSearch").addEventListener("input",renderExplore);
+$("#promptGrid").addEventListener("click",e=>{const b=e.target.closest("[data-use-prompt]");if(!b)return;$("#entryTitle").value="";$("#entryText").value=prompts[Number(b.dataset.usePrompt)][1]+"\n\n";navigate("new-entry");$("#entryText").focus()});
+function renderEntries(){const list=$("#entryList");$("#reflectionCount").textContent=`${data.entries.length} ${data.entries.length===1?"entry":"entries"}`;if(!data.entries.length){list.innerHTML='<div class="empty-state">Your saved moments will appear here.<br>Start with one small thing you appreciate today.</div>';return}list.innerHTML=data.entries.map(e=>`<article class="saved-entry"><div class="saved-entry-top"><span class="eyebrow">${prettyDate(e.date)}</span><button class="entry-delete" data-delete="${e.id}">Delete</button></div><h3>${escapeHtml(e.title||"A moment worth remembering")}</h3><p>${escapeHtml(e.text)}</p><div class="entry-badges"><span>${escapeHtml(e.tag||"Everyday moments")}</span>${e.mood?`<span>${escapeHtml(e.mood)}</span>`:""}</div></article>`).join("")}
+$("#entryList").addEventListener("click",e=>{const b=e.target.closest("[data-delete]");if(!b)return;if(!confirm("Delete this journal entry?"))return;data.entries=data.entries.filter(x=>x.id!==b.dataset.delete);saveData();renderEntries();renderHome();showToast("Entry deleted.")});
+function renderProgress(){const n=data.entries.length;$("#progressTotal").textContent=n;$("#progressStreak").textContent=streak();const tags={};data.entries.forEach(e=>tags[e.tag]=(tags[e.tag]||0)+1);$("#topTag").textContent=n?Object.entries(tags).sort((a,b)=>b[1]-a[1])[0][0]:"—";const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push({key:dateKey(d),label:d.toLocaleDateString(undefined,{weekday:"short"}),count:data.entries.filter(e=>e.date===dateKey(d)).length})}const max=Math.max(1,...days.map(x=>x.count));$("#weekChart").innerHTML=days.map(x=>`<div class="day-bar"><div class="bar-track"><div class="bar-fill" style="height:${x.count/max*100}%"></div></div><span>${x.label}</span></div>`).join("");const moods={};data.entries.forEach(e=>{if(e.mood)moods[e.mood]=(moods[e.mood]||0)+1});const moodList=Object.entries(moods).sort((a,b)=>b[1]-a[1]);$("#moodSummary").innerHTML=moodList.length?moodList.map(([m,c])=>`<div class="mood-line"><span>${m}</span><div class="mood-track"><div class="mood-fill" style="width:${c/Math.max(...moodList.map(x=>x[1]))*100}%"></div></div><b>${c}</b></div>`).join(""):'<p class="muted">Your mood summary will appear after you save an entry.</p>';const now=new Date(),year=now.getFullYear(),month=now.getMonth(),first=new Date(year,month,1).getDay(),total=new Date(year,month+1,0).getDate();$("#calendarMonth").textContent=now.toLocaleDateString(undefined,{month:"long",year:"numeric"});const active=new Set(data.entries.map(e=>e.date));let cells=["S","M","T","W","T","F","S"].map(x=>`<div class="calendar-cell head">${x}</div>`).join("");for(let i=0;i<first;i++)cells+='<div class="calendar-cell"></div>';for(let d=1;d<=total;d++){const key=dateKey(new Date(year,month,d));cells+=`<div class="calendar-cell ${active.has(key)?"has-entry":""}">${d}</div>`}$("#calendarGrid").innerHTML=cells}
+function applySettings(){$("body").classList.toggle("high-contrast",!data.softContrast);$("body").classList.toggle("large-text",data.fontSize!=="16");$("#profileName").value=data.profile;$("#fontSize").value=data.fontSize;$("#softContrast").checked=data.softContrast;$("#reminders").checked=data.reminders}
+$("#saveProfile").addEventListener("click",()=>{data.profile=$("#profileName").value.trim()||"there";saveData();renderHome();showToast("Profile saved.")});
+$("#fontSize").addEventListener("change",e=>{data.fontSize=e.target.value;saveData();applySettings()});
+$("#softContrast").addEventListener("change",e=>{data.softContrast=e.target.checked;saveData();applySettings()});
+$("#reminders").addEventListener("change",e=>{data.reminders=e.target.checked;saveData();showToast(e.target.checked?"Daily reminder preference enabled.":"Daily reminder preference turned off.")});
+$("#savePin").addEventListener("click",()=>{const a=$("#newPin").value,b=$("#confirmPin").value;if(!/^\d{4,8}$/.test(a)){ $("#pinFeedback").textContent="Choose a PIN with 4–8 digits.";return}if(a!==b){$("#pinFeedback").textContent="The PINs do not match.";return}data.pin=a;saveData();$("#newPin").value=$("#confirmPin").value="";$("#pinFeedback").textContent="Your PIN has been saved.";showToast("Privacy PIN updated.")});
+$("#removePin").addEventListener("click",()=>{if(!data.pin){$("#pinFeedback").textContent="No PIN is currently set.";return}if(!confirm("Remove the PIN lock?"))return;data.pin="";saveData();$("#pinFeedback").textContent="PIN lock removed.";showToast("PIN lock removed.")});
+$("#unlockBtn").addEventListener("click",unlock);$("#unlockPin").addEventListener("keydown",e=>{if(e.key==="Enter")unlock()});function unlock(){if($("#unlockPin").value===data.pin){$("#lockScreen").classList.add("hidden");$("#lockError").textContent="";$("#unlockPin").value=""}else $("#lockError").textContent="That PIN doesn't match. Try again."}
+$("#exportData").addEventListener("click",()=>{const blob=new Blob([JSON.stringify({profile:data.profile,entries:data.entries},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="waypoint-journal-export.json";a.click();URL.revokeObjectURL(a.href);showToast("Your export is ready.")});
+$("#deleteData").addEventListener("click",()=>{if(!confirm("This will permanently delete all entries and settings saved in this browser. Continue?"))return;localStorage.removeItem(STORE);data={...defaults};applySettings();renderHome();renderEntries();renderProgress();showToast("Journal data deleted.")});
+updateDates();applySettings();renderHome();renderExplore();renderEntries();renderProgress();if(data.pin){$("#lockScreen").classList.remove("hidden")}
